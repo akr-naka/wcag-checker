@@ -16,29 +16,22 @@ wcag/
 ├── config/
 │   └── pa11y-config.json # 監査基準（WCAG 2.2 AA等）やタイムアウトの設定
 ├── scripts/
-│   ├── entrypoint.sh     # 実行コマンドを簡略化するスクリプト
+│   ├── entrypoint.sh     # 複数ファイル実行や一覧ページ生成を制御するスクリプト
 │   └── reporter.js       # Pa11yのJSON出力をリッチなHTMLに変換する独自スクリプト
 ├── README.md             # このドキュメント
+├── check_wcag.sh         # 実行スクリプト
 └── reports/              # 生成されたHTMLレポートの保存先
 ```
 
-## セットアップ
-
-初回実行時や、設定ファイルを変更した場合はDockerイメージをビルドします。
+## 初期設定 (.env ファイルの作成)
+ルートディレクトリにある `.env.example` をコピーして `.env` ファイルを作成してください。このファイルで、テストしたいフォルダやファイル名を設定します。
 
 ```bash
 cd /Users/naka/Documents/wcag
-docker compose build
-```
-
-## 設定 (.env ファイルの利用)
-ルートディレクトリにある `.env.example` をコピーして `.env` ファイルを作成すると、監査対象のディレクトリや複数のファイルを一度に指定できます。
-
-```bash
 cp .env.example .env
 ```
 
-**.env の例**
+**.env の設定例**
 ```env
 # 監査対象のHTMLファイルが入っているローカルマシンのディレクトリパス
 HTML_SOURCE_DIR=../source/seikatsu_test/html
@@ -47,51 +40,22 @@ HTML_SOURCE_DIR=../source/seikatsu_test/html
 TARGET_FILES=index.html, about.html, https://example.com
 ```
 
-これにより、以下のコマンドを叩くだけで指定した**すべてのファイル**を一括で監査し、それぞれ個別のレポートを出力してくれます。
+## 🌟 実行方法（推奨：自動スクリプト）
+
+日常的なチェックは、用意されている自動スクリプトを使うのが一番簡単です。
 
 ```bash
-docker compose run --rm pa11y
+./check_wcag.sh
 ```
 
-## 基本的な使い方（コマンド引数を使う場合）
+**【このスクリプトがやってくれること】**
+1. コンテナの最新化（`docker compose build`）
+2. `.env` に記載された全ファイルの自動監査（`docker compose run pa11y`）
+3. **監査完了後、Macの標準ブラウザを起動して結果レポートを自動表示**
 
-対象のHTMLファイル（デフォルトでは `../source/seikatsu_test/html` が `/app/src` にマウントされています）をスキャンし、タイムスタンプ付きのレポートを `reports/` ディレクトリに生成します。
-
-```bash
-docker compose run --rm pa11y
-```
-※ デフォルトで `index.html` が監査され、`reports/report_YYYYMMDD_HHMMSS.html` が出力されます。
-
-**他のローカルファイルをチェックする場合**
-ファイル名（またはサブディレクトリからの相対パス）をそのまま渡すだけでOKです。`file:///...` と打つ必要はありません。
-
-```bash
-# 例: ../source/seikatsu_test/html/about.html をチェックする場合
-docker compose run --rm pa11y about.html
-
-# 例: ../source/seikatsu_test/html/company/info.html をチェックする場合
-docker compose run --rm pa11y company/info.html
-```
-
-## その他の使い方
-
-### 1. 特定のURL（外部サイトなど）をチェックする
-対象をローカルファイルではなく外部のURLにする場合は、以下のようにコマンドを変更します。
-※ Basic認証がかかっている場合は `https://user:pass@example.com` のようにURLに含めて指定してください。
-
-```bash
-docker compose run --rm pa11y https://example.com
-```
-※ 自動的に `reports/report_example.com_YYYYMMDD_HHMMSS.html` という名前で出力されます。
-
-### 2. レポートのHTML化を行わず、コンソールに出力する
-詳細なHTMLレポートは不要で、ターミナル上でサクッと結果だけ見たい場合に使用します。
-
-```bash
-docker compose run --rm --entrypoint pa11y pa11y \
-  --config /app/config/pa11y-config.json \
-  file:///app/src/index.html
-```
+### 💡 複数ファイル指定時の便利機能
+`.env` の `TARGET_FILES` に複数のファイル（例: `index.html, about.html`）を指定して実行した場合、テスト終了後に**「レポート一覧ページ（目次）」が1つだけ自動生成され、ブラウザでパカッと開きます。**
+大量のタブが開くことなく、一覧ページからゆっくり各ページの結果を確認できます。
 
 ## よくある質問（FAQ）
 
