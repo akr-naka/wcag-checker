@@ -1,0 +1,29 @@
+{
+  "standard": "WCAG2AA",
+  "runners": [
+    "htmlcs",
+    "axe"
+  ],
+  "axeConfig": {
+    "locale": "ja"
+  },
+  "includeNotices": true,
+  "includeWarnings": true,
+  "level": "notice",
+  "timeout": 60000,
+  "wait": 5000,
+  "chromeLaunchConfig": {
+    "executablePath": "/usr/bin/chromium",
+    "args": [
+      "--no-sandbox",
+      "--disable-setuid-sandbox",
+      "--disable-dev-shm-usage",
+      "--disable-gpu",
+      "--headless",
+      "--single-process"
+    ]
+  },
+  "headers": {
+    "User-Agent": "Pa11y Accessibility Checker"
+  }
+}

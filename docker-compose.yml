@@ -1,0 +1,17 @@
+services:
+  pa11y:
+    build: .
+    container_name: pa11y-checker
+    volumes:
+      - ./reports:/app/reports
+      - ./config/pa11y-config.json:/app/config/pa11y-config.json
+      - ./scripts/reporter.js:/app/scripts/reporter.js
+      - ${HTML_SOURCE_DIR:-../source/seikatsu_test/html}:/app/src:ro
+    environment:
+      - TARGET_FILES=${TARGET_FILES:-index.html}
+      - TZ=Asia/Tokyo
+    # セキュリティ: Chromium の --no-sandbox に必要
+    security_opt:
+      - seccomp=unconfined
+    # エントリーポイントをシェルスクリプトに設定し、コマンドを簡略化
+    entrypoint: ["/app/scripts/entrypoint.sh"]
