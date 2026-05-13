@@ -27,7 +27,7 @@ Dockerコンテナ上で **[Pa11y](https://pa11y.org/)** を動かし、ロー�
 <summary>📂 ファイル・ディレクトリ構成（クリックで展開）</summary>
 
 ```text
-wcag/
+wcag-checker/
 ├── Dockerfile            # Pa11y + Chromium 実行環境イメージ定義
 ├── docker-compose.yml    # コンテナ・ボリュームマウントの設定
 ├── config/
