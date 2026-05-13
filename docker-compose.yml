@@ -6,7 +6,7 @@ services:
       - ./reports:/app/reports
       - ./config/pa11y-config.json:/app/config/pa11y-config.json
       - ./scripts/reporter.js:/app/scripts/reporter.js
-      - ${HTML_SOURCE_DIR:-../source/seikatsu_test/html}:/app/src:ro
+      - ${HTML_SOURCE_DIR:?HTML_SOURCE_DIR が設定されていません。check_wcag.sh を通じて実行してください。}:/app/src:ro
     environment:
       - TARGET_FILES=${TARGET_FILES:-index.html}
       - TZ=Asia/Tokyo
