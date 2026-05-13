@@ -26,8 +26,8 @@ ENV CHROMIUM_PATH=/usr/bin/chromium
 
 WORKDIR /app
 
-# Pa11y と HTMLレポーター をグローバルインストール
-RUN npm install -g pa11y pa11y-reporter-html
+# Pa11y と必要なライブラリをインストール
+RUN npm install -g pa11y pa11y-reporter-html cheerio
 
 # 設定ファイルとレポーターをコピー
 COPY config/pa11y-config.json /app/config/pa11y-config.json
