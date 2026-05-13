@@ -1,5 +1,4 @@
-# ♿ WCAG 2.2 AA Accessibility Auto-Audit
-
+# ♿ WCAG2.2 AA Checker
 Dockerコンテナ上で **[Pa11y](https://pa11y.org/)** を動かし、ローカルのHTMLファイルに対して WCAG 2.2 AA 準拠のアクセシビリティ監査を全自動で行うツールです。
 
 ---
