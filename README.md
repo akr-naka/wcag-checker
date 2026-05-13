@@ -23,6 +23,24 @@ Dockerコンテナ上で **[Pa11y](https://pa11y.org/)** を動かし、ロー�
 * **Chromium:** ヘッドレスブラウザ（DOMのレンダリング、CSS/JSの評価）
 * **Shell Script (Bash):** 実行フロー（ビルド〜監査〜ブラウザ表示）の全自動化
 
+<details>
+<summary>📂 ファイル・ディレクトリ構成（クリックで展開）</summary>
+
+```text
+wcag/
+├── Dockerfile            # Pa11y + Chromium 実行環境イメージ定義
+├── docker-compose.yml    # コンテナ・ボリュームマウントの設定
+├── config/
+│   └── pa11y-config.json # 監査基準（WCAG 2.2 AA等）やタイムアウトの設定
+├── scripts/
+│   ├── entrypoint.sh     # 複数ファイル実行や一覧ページ生成を制御するスクリプト
+│   └── reporter.js       # Pa11yのJSON出力をリッチなHTMLに変換する独自スクリプト
+├── README.md             # このドキュメント
+├── check_wcag.sh         # 解析実行スクリプト
+└── reports/              # 生成されたHTMLレポートの保存先
+```
+</details>
+
 ---
 
 ## 🚀 クイックスタート
@@ -65,22 +83,3 @@ TARGET_FILES=index.html, about.html, https://example.com
 
 これにより、ブラウザのタブが大量に開くのを防ぎ、一覧ページからゆっくり各ページの結果を確認することができます。
 
----
-
-<details>
-<summary>📂 ファイル・ディレクトリ構成（クリックで展開）</summary>
-
-```text
-wcag/
-├── Dockerfile            # Pa11y + Chromium 実行環境イメージ定義
-├── docker-compose.yml    # コンテナ・ボリュームマウントの設定
-├── config/
-│   └── pa11y-config.json # 監査基準（WCAG 2.2 AA等）やタイムアウトの設定
-├── scripts/
-│   ├── entrypoint.sh     # 複数ファイル実行や一覧ページ生成を制御するスクリプト
-│   └── reporter.js       # Pa11yのJSON出力をリッチなHTMLに変換する独自スクリプト
-├── README.md             # このドキュメント
-├── check_wcag.sh         # 解析実行スクリプト
-└── reports/              # 生成されたHTMLレポートの保存先
-```
-</details>
