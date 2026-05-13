@@ -1,8 +1,53 @@
-const fs = require('fs');
-
 /**
  * Pa11y JSON出力 → 日本語アコーディオン付きHTMLレポート変換スクリプト
  */
+
+const fs = require('fs');
+const path = require('path');
+
+// グローバルにインストールされた cheerio を読み込むためのパス解決（Docker環境用）
+let cheerio;
+try {
+    cheerio = require('cheerio');
+} catch (e) {
+    try {
+        cheerio = require('/usr/local/lib/node_modules/cheerio');
+    } catch (e2) {
+        cheerio = null;
+    }
+}
+/**
+ * 元のHTMLファイルから、セレクタに該当する要素が含まれる「行全体」と「行番号」を抽出する
+ */
+function getFullInfo(selector, context, filePath) {
+    const result = { html: context, line: null };
+    
+    if (!filePath || !fs.existsSync(filePath)) {
+        return result; 
+    }
+
+    try {
+        const originalHtml = fs.readFileSync(filePath, 'utf8');
+        const lines = originalHtml.split('\n');
+        
+        // Pa11yのcontext（省略されている場合がある）をヒントに、ファイル内の行を特定する
+        const searchSnippet = (context || '').split('...')[0].trim();
+        
+        if (searchSnippet) {
+            for (let i = 0; i < lines.length; i++) {
+                if (lines[i].includes(searchSnippet)) {
+                    result.line = i + 1;
+                    // その行全体を返し、先頭と末尾の空白を削除する
+                    result.html = lines[i].trim();
+                    break;
+                }
+            }
+        }
+    } catch (err) {
+        // エラー時は初期値を返す
+    }
+    return result;
+}
 
 // エラーの翻訳とタイトル生成
 function getTranslation(code, originalMessage) {
@@ -84,6 +129,9 @@ function generateHtml(issues, url) {
     const grouped = groupIssues(issues);
     const now = new Date().toLocaleString('ja-JP', { timeZone: 'Asia/Tokyo' });
 
+    // URLからローカルファイルパスを特定する (file:///app/src/... -> /app/src/...)
+    const filePath = url.startsWith('file://') ? url.replace('file://', '') : '';
+
     const totalErrors = Object.values(grouped.error).reduce((sum, g) => sum + g.instances.length, 0);
     const totalWarnings = Object.values(grouped.warning).reduce((sum, g) => sum + g.instances.length, 0);
     const totalNotices = Object.values(grouped.notice).reduce((sum, g) => sum + g.instances.length, 0);
@@ -104,15 +152,18 @@ function generateHtml(issues, url) {
             <details class="issue-details">
                 <summary>該当箇所を見る (${group.instances.length}件)</summary>
                 <div class="instances-list">
-                    ${group.instances.map(instance => `
+                    ${group.instances.map(instance => {
+                        // ここでファイルから全文と行番号を取得
+                        const info = getFullInfo(instance.selector, instance.context, filePath);
+                        return `
                         <div class="instance">
                             ${instance.originalMessage && instance.originalMessage !== group.desc ? `<div class="detail-label">詳細メッセージ</div><div class="original-msg">${escapeHtml(instance.originalMessage)}</div>` : ''}
-                            <div class="detail-label">対象のソースコード</div>
-                            <pre><code>${escapeHtml(instance.context || 'N/A')}</code></pre>
-                            <div class="detail-label" style="margin-top:8px;">セレクタ</div>
-                            <div class="selector-text">${escapeHtml(instance.selector || 'N/A')}</div>
+                            <div class="detail-label">
+                                対象のソースコード ${info.line ? `<span class="line-badge">${info.line}行目</span>` : ''}
+                            </div>
+                            <pre class="code-block"><code>${escapeHtml(info.html || 'N/A')}</code></pre>
                         </div>
-                    `).join('')}
+                    `}).join('')}
                 </div>
             </details>
         </div>`;
@@ -227,10 +278,10 @@ details.issue-details[open] summary::before {
     border-bottom: none;
 }
 
-.detail-label{display:block;font-size:.72rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px}
+.detail-label{display:block;font-size:.72rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;display:flex;align-items:center;gap:8px}
+.line-badge{background:#e2e8f0;color:#475569;padding:2px 8px;border-radius:4px;font-size:.7rem;font-family:monospace;}
 .original-msg{font-size:0.85rem;color:#b91c1c;background:#fef2f2;padding:8px;border-radius:6px;margin-bottom:12px;border:1px solid #fecaca;}
-pre{margin:0;white-space:pre-wrap;word-break:break-all;font-family:'Fira Code','Courier New',monospace;font-size:.85rem;color:#334155;line-height:1.5;background:#f8fafc;padding:12px;border-radius:6px;border:1px solid #e2e8f0;}
-.selector-text{font-family:monospace;font-size:.82rem;color:#6366f1;word-break:break-all;background:#f0fdf4;padding:8px 12px;border-radius:6px;border:1px solid #bbf7d0;}
+pre.code-block{margin:0;white-space:pre-wrap;word-break:break-all;font-family:'Fira Code','Courier New',monospace;font-size:.85rem;color:#334155;line-height:1.5;background:#f8fafc;padding:16px;border-radius:6px;border:1px solid #e2e8f0;border-left:4px solid #6366f1;}
 
 .hidden{display:none}
 .no-results{text-align:center;padding:60px 20px;color:var(--muted)}
